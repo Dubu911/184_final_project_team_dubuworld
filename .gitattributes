@@ -1,0 +1,24 @@
+# Enforce LF line endings for all Godot text files
+* text=auto eol=lf
+
+*.gd        text eol=lf
+*.tscn      text eol=lf
+*.tres      text eol=lf
+*.godot     text eol=lf
+*.gdshader  text eol=lf
+*.cfg       text eol=lf
+*.uid       text eol=lf
+*.md        text eol=lf
+*.import    text eol=lf
+
+# Binary files — never touch line endings
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.svg    binary
+*.ogg    binary
+*.wav    binary
+*.mp4    binary
+*.ttf    binary
+*.otf    binary
+*.pdf    binary
