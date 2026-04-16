@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaCanvas: Milestone Report</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 0 24px;
+      color: #222;
+      line-height: 1.7;
+    }
+    h1 { text-align: center; color: #1a4a8a; font-size: 2.2em; margin-bottom: 4px; }
+    .subtitle { text-align: center; color: #444; margin-bottom: 6px; }
+    .team { text-align: center; font-weight: bold; margin-bottom: 4px; }
+    .members { text-align: center; margin-bottom: 24px; }
+    .links { text-align: center; margin-bottom: 32px; }
+    .links a { margin: 0 12px; color: #1a4a8a; }
+    h2 { color: #1a4a8a; border-bottom: 2px solid #1a4a8a; padding-bottom: 4px; margin-top: 36px; }
+    ul { padding-left: 24px; margin-top: 8px; }
+    li { margin-bottom: 4px; }
+    .placeholder {
+      background: #f5f5f5;
+      border: 1px dashed #aaa;
+      padding: 14px;
+      text-align: center;
+      color: #888;
+      border-radius: 4px;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>AquaCanvas: Real-Time Watercolor Simulation</h1>
+  <p class="subtitle">CS 184/284A Final Project Milestone Report, Spring 2026</p>
+  <p class="team">Team Dubuworld</p>
+  <p class="members">Daeyoung Kim, Jaegyum Kim, Brian Sui, Shenrui Wu</p>
+
+  <div class="links">
+    <a href="proposal.html">Proposal</a>
+    <a href="#video">Milestone Video</a>
+    <a href="#slides">Slides</a>
+  </div>
+
+  <h2>What We Have Accomplished</h2>
+
+  <p>
+    We have a working CPU-based watercolor simulation running in Godot at 64×64.
+    All five physics stages from the proposal are implemented and running together each frame:
+  </p>
+  <ul>
+    <li><strong>Water displacement.</strong> Gravity, surface tension, and spreading force move water around. We use a 4-directional redistribution scheme to avoid the checkerboard pattern we ran into with the David Small paper formulation.</li>
+    <li><strong>Inertia tracking.</strong> Water flow has momentum — it speeds up when continuing in the same direction and slows down when reversing. We have two tunable parameters for this that can be adjusted live while the sim runs.</li>
+    <li><strong>Evaporation, diffusion, and deposition.</strong> Water dries over time, wet pigment spreads into neighboring wet areas, and as the water evaporates the pigment sticks to the paper permanently.</li>
+  </ul>
+  <p>
+    We also have a watercolor brush with Wacom pressure support, a pencil, an eraser,
+    a color picker, and canvas tilt controls (W/A/S/D) that apply gravity in any direction to produce dripping.
+  </p>
+
+  <h2>Preliminary Results</h2>
+
+  <p>
+    The physics all work together. You can paint a stroke, tilt the canvas, and watch the
+    water carry pigment downhill. Wet strokes bleed into each other. The paint gradually
+    dries and leaves a stain. At 64×64 it runs at interactive frame rates, which is what
+    we needed to validate the physics before moving to the GPU.
+  </p>
+  <p>
+    The CPU version is too slow for anything larger than that, which is expected.
+    The GPU port is the next big step.
+  </p>
+
+  <h2 id="video">Milestone Video</h2>
+
+  <div style="text-align: center; margin: 16px 0;">
+    <iframe width="720" height="405" src="https://www.youtube.com/embed/ohg5wDCtBHA"
+      allowfullscreen></iframe>
+  </div>
+
+  <h2 id="slides">Presentation Slides</h2>
+
+  <p><a href="milestone_slides.pdf">Milestone Slides (PDF)</a></p>
+
+  <h2>Progress Relative to Plan</h2>
+
+  <p>
+    We are roughly on track. Week 1 was supposed to get the CPU prototype working with
+    water displacement and a basic brush, and we have done that and more — all five physics
+    stages are in and the brush system is more complete than planned.
+    The GPU port has not started yet, which is the main thing we need to get moving on.
+  </p>
+
+</body>
+</html>
