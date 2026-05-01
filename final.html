@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaCanvas: Final Report</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 0 24px;
+      color: #222;
+      line-height: 1.7;
+    }
+    h1 { text-align: center; color: #1a4a8a; font-size: 2.2em; margin-bottom: 4px; }
+    .subtitle { text-align: center; color: #444; margin-bottom: 6px; }
+    .team { text-align: center; font-weight: bold; margin-bottom: 4px; }
+    .members { text-align: center; margin-bottom: 24px; }
+    .links { text-align: center; margin-bottom: 32px; }
+    .links a { margin: 0 12px; color: #1a4a8a; }
+    h2 { color: #1a4a8a; border-bottom: 2px solid #1a4a8a; padding-bottom: 4px; margin-top: 36px; }
+    h3 { color: #333; margin-top: 20px; margin-bottom: 6px; }
+    ul { padding-left: 24px; margin-top: 8px; }
+    li { margin-bottom: 4px; }
+    .img-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .img-row img {
+      width: 260px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .img-row img.wide {
+      width: 400px;
+    }
+    .caption {
+      text-align: center;
+      font-size: 0.85em;
+      color: #666;
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+    th { background: #f0f4fa; color: #1a4a8a; }
+  </style>
+</head>
+<body>
+
+  <h1>AquaCanvas: Real Time Watercolor Simulation</h1>
+  <p class="subtitle">CS 184 Final Project Report, Spring 2026</p>
+  <p class="team">Team Dubuworld</p>
+  <p class="members">Daeyoung Kim, Jaegyeom Kim, Brian Sui, Shenrui Wu</p>
+
+  <div class="links">
+    <a href="https://dubu911.github.io/184_final_project_team_dubuworld/final.html">Final Webpage</a>
+    <a href="https://docs.google.com/presentation/d/1uWyZ_dFy1vqloY9BwgCkkBL45YiRU4hlY9-wqG-Omxk/edit?usp=sharing">Final Presentation</a>
+    <a href="https://youtu.be/HBeyEsnZWV0">Final Video</a>
+    <a href="final_project_proposal.pdf">Proposal</a>
+    <a href="milestone.html">Milestone</a>
+  </div>
+
+  <h2>Abstract</h2>
+  <p>
+    AquaCanvas is a real time watercolor painting tool built in Godot 4.4.1 that simulates physically based fluid dynamics entirely on the GPU. The simulation runs five compute shader stages (evaporation, force calculation, water and pigment transport, deposition, and diffusion) each frame on a 256×256 canvas at interactive frame rates. Starting from a CPU prototype that could only run at 64×64, we ported the entire physics pipeline to GLSL compute shaders via Godot's RenderingDevice API. The final tool supports pressure sensitive brushes (Wacom tablet), canvas tilt, real time physics parameter adjustment, and PNG export. The result is a painting tool that produces recognizable watercolor effects like wet on wet bleeding, edge darkening, and gravity driven dripping, all of which emerge naturally from the physics rather than from textures or tricks.
+  </p>
+
+  <h2>Technical Approach</h2>
+
+  <h3>Starting Point</h3>
+  <p>
+    At the milestone we had a CPU based simulation running at 64×64. All five physics stages were working but everything ran in GDScript on the CPU, which was too slow for larger canvases. The milestone was the reference we validated the physics against before moving to GPU.
+  </p>
+
+  <h3>GPU Physics Pipeline</h3>
+  <p>
+    We rewrote the entire simulation as GLSL 450 compute shaders dispatched through Godot's <code>RenderingDevice</code> API. Each shader runs in 8×8 work groups over the full 256×256 canvas. All textures use <code>R32G32B32A32_SFLOAT</code> format and are double buffered (shaders read from one copy and write to the other) to avoid read/write conflicts. The five stages run in order every frame:
+  </p>
+  <ul>
+    <li><strong>Evaporation.</strong> Each cell loses water proportional to its exposed surface area and a tunable evaporation constant.</li>
+    <li><strong>Force calculation.</strong> A 4-directional displacement map accumulates gravity, surface tension (looks ahead multiple pixels, stops at dry boundaries), and spreading force from immediate neighbors. Force cancellation between opposing directions prevents oscillation.</li>
+    <li><strong>Water and pigment transport.</strong> Water moves according to the displacement map and carries mobile pigment proportionally.</li>
+    <li><strong>Deposition.</strong> Mobile pigment settles onto the static (dried) layer scaled by local water amount and a paper absorbency map (randomized 0.1–0.2).</li>
+    <li><strong>Diffusion.</strong> Static pigment spreads slightly into neighboring dry areas to soften edges.</li>
+  </ul>
+  <p>
+    We deviated from the David Small formulation for water redistribution. The paper's scheme produced a checkerboard artifact at our grid scale, so we switched to a 4-directional displacement approach where each cell computes its outflow to each neighbor independently before any values are updated.
+  </p>
+
+  <h3>Brush System</h3>
+  <p>
+    Brush strokes are applied via an <code>add_paint.glsl</code> shader that uploads a circular dab at the stroke position each frame. A per stroke pixel mask prevents repainting the same pixel twice within one stroke, eliminating the opacity doubling artifact that appears with naive blending. The removing brush uses Beer-Lambert mass conversion (<code>alpha = 1 - exp(-K * mass)</code>) so removal is consistent across alpha values and works on the mobile layer first before touching the dried static layer.
+  </p>
+
+  <h2>Problems Encountered</h2>
+  <ul>
+    <li><strong>Checkerboard artifact.</strong> The original Small paper redistribution scheme caused a flickering checkerboard at our resolution. Because each cell both read from and wrote to the same buffer in the same pass, neighboring cells saw each other's partially updated values, producing alternating high/low water patterns. We resolved this by precomputing a displacement map in one pass and applying it in a second pass, so reads and writes never mix in the same frame.</li>
+    <li><strong>Outflow model to inflow model.</strong> Our first water transport shader was outflow based: each cell pushed water to its neighbors according to the displacement map. This caused conservation errors because multiple cells could simultaneously push into the same neighbor, summing to more water than physically possible. We switched to an inflow model where each cell pulls from its neighbors instead, making it straightforward to clamp the total incoming water to the available supply and preserve mass exactly.</li>
+    <li><strong>CPU to GPU stroke latency.</strong> When we first ported brush strokes to GPU, we were still computing the stroke dab position and radius on the CPU each frame and uploading a uniform buffer before dispatching the compute shader. Under high input rates (fast Wacom strokes) the round trip stalled the render thread and produced visible gaps between dabs. We resolved this by batching all stroke events that arrived within one frame into a single buffer upload, dispatching the <code>add_paint.glsl</code> shader once per event in sequence rather than waiting for the next frame, which eliminated the gaps without increasing per frame GPU cost.</li>
+  </ul>
+
+  <h2>Lessons Learned</h2>
+  <ul>
+    <li>Double buffering is non-negotiable for stable grid based fluid sims. Single buffer updates cause visible ordering artifacts immediately.</li>
+    <li>GPU APIs (even through a game engine) have undocumented state requirements. <code>texture_update()</code> and texture creation are not equivalent operations even when the data is the same.</li>
+    <li>Start with a CPU reference. Having a ground truth made debugging the GPU port much faster; when output diverged we could compare pixel by pixel.</li>
+    <li>Physics that look correct at small scale do not always look correct at large scale. Several parameter values needed retuning after moving from 64×64 to 256×256.</li>
+  </ul>
+
+  <h2>Results</h2>
+
+  <div style="text-align: center; margin: 16px 0;">
+    <iframe width="720" height="405" src="https://www.youtube.com/embed/HBeyEsnZWV0"
+      allowfullscreen></iframe>
+  </div>
+  <p class="caption">Final demo video (replace embed ID with final video when uploaded).</p>
+
+  <div class="img-row">
+    <img src="Images/Outflow_with_evaporation.png" alt="Painting demo 1" />
+    <img src="Images/outlining.png" alt="Painting demo 2" />
+  </div>
+  <p class="caption">Sample paintings showing wet on wet bleeding and edge darkening.</p>
+
+  <div class="img-row">
+    <img src="Images/dripping_effect.png" alt="Gravity drip" />
+    <img src="Images/diffusion2.png" alt="Diffusion" />
+  </div>
+  <p class="caption">Left: gravity driven drip from canvas tilt. Right: pigment diffusion effect over time.</p>
+
+  <h2>References</h2>
+  <ul>
+    <li>Curtis, C. J., Anderson, S. E., Seims, J. E., Fleischer, K. W., and Salesin, D. H. <em>Computer-Generated Watercolor.</em> SIGGRAPH 1997.</li>
+    <li>Small, D. <em>Modeling Watercolor by Simulating Diffusion, Pigment, and Paper Fibers.</em></li>
+    <li>Chu, N. and Tai, C.-L. <em>MoXi: Real-Time Ink Dispersion in Absorbent Paper.</em> SIGGRAPH 2005.</li>
+    <li>Van Laerhoven, T. and Van Reeth, F. <em>Real-Time Simulation of Watery Paint.</em> Computer Animation and Virtual Worlds, 2005.</li>
+    <li>Godot Engine 4.4.1 RenderingDevice API documentation.</li>
+  </ul>
+
+  <h2>Contributions</h2>
+  <table>
+    <tr><th>Member</th><th>Contributions</th></tr>
+    <tr><td>Daeyoung Kim</td><td>Overall project lead. Drove architecture decisions and contributed to every part of the system. Produced demo videos. Participated in weekly algorithm discussion meetings and parameter tuning experiments.</td></tr>
+    <tr><td>Jaegyeom Kim</td><td>Contributed to fluid simulation logic and helped resolve the checkerboard artifact. Edited both the milestone and final project videos. Participated in weekly algorithm discussion meetings and parameter tuning experiments.</td></tr>
+    <tr><td>Brian Sui</td><td>Assisted in GPU pipeline debugging. Proposed and implemented the CPU-side input buffer to resolve stroke batching latency. Participated in weekly algorithm discussion meetings and parameter tuning experiments.</td></tr>
+    <tr><td>Shenrui Wu</td><td>Contributed to the user interface and color representation, including the Beer-Lambert opacity model for the eraser brush. Participated in weekly algorithm discussion meetings and parameter tuning experiments.</td></tr>
+  </table>
+
+</body>
+</html>

@@ -1,0 +1,408 @@
+[gd_scene load_steps=17 format=3 uid="uid://k6ytgdayt334"]
+
+[ext_resource type="Script" uid="uid://cdxlvkajpq3pc" path="res://trial4/main_4.gd" id="1_bp1uf"]
+[ext_resource type="Script" uid="uid://cvvq6glpl1bup" path="res://trial4/brush_manager.gd" id="2_2yaok"]
+[ext_resource type="Script" uid="uid://b8r4ttw2vfo28" path="res://trial4/pencil_brush.gd" id="2_h1ynh"]
+[ext_resource type="Script" uid="uid://bc5j1wi806pcg" path="res://trial4/removing_brush.gd" id="2_removing"]
+[ext_resource type="Script" uid="uid://bgucbqvniw8vi" path="res://trial4/watercolor_brush.gd" id="2_shnf3"]
+[ext_resource type="Script" uid="uid://cjhtgqoi6ouao" path="res://trial4/camera_2d.gd" id="2_sl8jp"]
+[ext_resource type="Script" uid="uid://cduo36t1smadi" path="res://trial4/eraser_brush.gd" id="3_1yvx1"]
+[ext_resource type="Texture2D" uid="uid://b37d655y1kk84" path="res://icons/pallet.png" id="3_h1ynh"]
+[ext_resource type="Texture2D" uid="uid://d235qto2wf1ks" path="res://icons/removing_brush1.png" id="3_removing"]
+[ext_resource type="Texture2D" uid="uid://dtir1mkd8gl80" path="res://icons/pencil.png" id="4_1yvx1"]
+[ext_resource type="Script" uid="uid://cgy8dxuloorrd" path="res://trial4/painting_coordinator.gd" id="5_kn0cr"]
+[ext_resource type="Texture2D" uid="uid://j58fqdqtg4cu" path="res://icons/eraser.png" id="5_shnf3"]
+[ext_resource type="Script" uid="uid://dlbw47gs72ed5" path="res://trial4/physics_simulator_gpu.gd" id="7_hng6b"]
+[ext_resource type="PackedScene" uid="uid://cxm8vp3qkr1ya" path="res://trial4/physics_settings_window.tscn" id="13_physics_window"]
+[ext_resource type="Script" uid="uid://blhlexix6xa6m" path="res://trial4/file_manager.gd" id="14_file_manager"]
+[ext_resource type="PackedScene" path="res://trial4/new_canvas_dialog.tscn" id="15_new_canvas_dialog"]
+
+[node name="main4" type="Node2D"]
+script = ExtResource("1_bp1uf")
+
+[node name="layers_container" type="Node2D" parent="."]
+
+[node name="background" type="Sprite2D" parent="layers_container"]
+centered = false
+
+[node name="static_layer" type="Sprite2D" parent="layers_container"]
+
+[node name="mobile_layer" type="Sprite2D" parent="layers_container"]
+
+[node name="water_layer" type="Sprite2D" parent="layers_container"]
+visible = false
+
+[node name="pencil_layer" type="Sprite2D" parent="layers_container"]
+
+[node name="preview_layer" type="Sprite2D" parent="layers_container"]
+z_index = 4
+
+[node name="brush_cursor_outer" type="Sprite2D" parent="layers_container"]
+visible = false
+modulate = Color(1, 1, 1, 0.3)
+z_index = 100
+
+[node name="brush_cursor_inner" type="Sprite2D" parent="layers_container"]
+visible = false
+modulate = Color(1, 1, 1, 0.6)
+z_index = 101
+
+[node name="pencil_cursor" type="Sprite2D" parent="layers_container"]
+visible = false
+modulate = Color(0, 0, 0, 0.8)
+z_index = 102
+
+[node name="eraser_cursor" type="Sprite2D" parent="layers_container"]
+visible = false
+modulate = Color(1, 1, 1, 0.6)
+z_index = 103
+
+[node name="brush_manager" type="Node" parent="."]
+script = ExtResource("2_2yaok")
+painting_coordinator_path = NodePath("../painting_coordinator")
+watercolor_brush_path = NodePath("watercolor_brush")
+removing_brush_path = NodePath("removing_brush")
+pencil_brush_path = NodePath("pencil_brush")
+eraser_brush_path = NodePath("eraser_brush")
+layer_for_mouse_pos_path = NodePath("../layers_container/mobile_layer")
+current_color_display_path = NodePath("../CanvasLayer/color_swatch/current_color_display")
+color_picker_path = NodePath("../CanvasLayer/color_picker")
+brush_size_popup_path = NodePath("../CanvasLayer/brush_size_popup")
+brush_size_value_label_path = NodePath("../CanvasLayer/brush_size_popup/brush_size_control/size_value_label")
+removing_brush_size_popup_path = NodePath("../CanvasLayer/removing_brush_size_popup")
+removing_brush_size_value_label_path = NodePath("../CanvasLayer/removing_brush_size_popup/removing_brush_size_control/size_value_label")
+pencil_size_popup_path = NodePath("../CanvasLayer/pencil_size_popup")
+pencil_size_value_label_path = NodePath("../CanvasLayer/pencil_size_popup/pencil_size_control/size_value_label")
+eraser_size_popup_path = NodePath("../CanvasLayer/eraser_size_popup")
+eraser_size_value_label_path = NodePath("../CanvasLayer/eraser_size_popup/eraser_size_control/size_value_label")
+
+[node name="watercolor_brush" type="Node" parent="brush_manager"]
+script = ExtResource("2_shnf3")
+brush_color = Color(0.547642, 0.584073, 0.865523, 0.5)
+
+[node name="removing_brush" type="Node" parent="brush_manager"]
+script = ExtResource("2_removing")
+
+[node name="pencil_brush" type="Node" parent="brush_manager"]
+script = ExtResource("2_h1ynh")
+
+[node name="eraser_brush" type="Node" parent="brush_manager"]
+script = ExtResource("3_1yvx1")
+
+[node name="painting_coordinator" type="Node" parent="."]
+script = ExtResource("5_kn0cr")
+background_path = NodePath("../layers_container/background")
+water_layer_sprite_path = NodePath("../layers_container/water_layer")
+mobile_layer_sprite_path = NodePath("../layers_container/mobile_layer")
+static_layer_sprite_path = NodePath("../layers_container/static_layer")
+pencil_layer_sprite_path = NodePath("../layers_container/pencil_layer")
+preview_layer_sprite_path = NodePath("../layers_container/preview_layer")
+brush_manager_path = NodePath("../brush_manager")
+
+[node name="physics_simulator" type="Node" parent="painting_coordinator"]
+script = ExtResource("7_hng6b")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+offset = Vector2(32, 32)
+zoom = Vector2(9, 9)
+script = ExtResource("2_sl8jp")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="FileMenuButton" type="MenuButton" parent="CanvasLayer"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 70.0
+offset_bottom = 50.0
+text = "File ▼"
+
+[node name="SettingsButton" type="Button" parent="CanvasLayer"]
+offset_left = 80.0
+offset_top = 10.0
+offset_right = 160.0
+offset_bottom = 50.0
+text = "⚙ Settings"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -94.0
+offset_top = -342.0
+offset_right = -14.0
+offset_bottom = -19.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="watercolor_button" type="Button" parent="CanvasLayer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 0
+icon = ExtResource("3_h1ynh")
+
+[node name="removing_brush_button" type="Button" parent="CanvasLayer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 0
+icon = ExtResource("3_removing")
+
+[node name="pencil_button" type="Button" parent="CanvasLayer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 0
+icon = ExtResource("4_1yvx1")
+
+[node name="eraser_button" type="Button" parent="CanvasLayer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 0
+icon = ExtResource("5_shnf3")
+
+[node name="color_picker" type="ColorPicker" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -315.0
+offset_top = 20.0
+offset_right = -17.0
+offset_bottom = 557.0
+grow_horizontal = 0
+mouse_filter = 2
+edit_alpha = false
+
+[node name="pigment_control" type="VBoxContainer" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -155.0
+offset_top = 591.0
+offset_right = -85.0
+offset_bottom = 781.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="pigment_label" type="Label" parent="CanvasLayer/pigment_control"]
+layout_mode = 2
+text = "Alpha"
+horizontal_alignment = 1
+
+[node name="pigment_alpha_slider" type="VSlider" parent="CanvasLayer/pigment_control"]
+custom_minimum_size = Vector2(60, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 1.0
+step = 0.01
+value = 0.5
+
+[node name="water_control" type="VBoxContainer" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -94.0
+offset_top = 591.0
+offset_right = -24.0
+offset_bottom = 781.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="water_label" type="Label" parent="CanvasLayer/water_control"]
+layout_mode = 2
+text = "Water"
+horizontal_alignment = 1
+
+[node name="water_slider" type="VSlider" parent="CanvasLayer/water_control"]
+custom_minimum_size = Vector2(60, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 1.0
+step = 0.01
+value = 0.1
+
+[node name="color_swatch" type="ColorRect" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -270.0
+offset_top = 648.0
+offset_right = -200.0
+offset_bottom = 718.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="current_color_display" type="ColorRect" parent="CanvasLayer/color_swatch"]
+z_index = 1
+layout_mode = 0
+offset_right = 70.0
+offset_bottom = 70.0
+
+[node name="brush_size_popup" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -406.0
+offset_top = -341.0
+offset_right = -113.0
+offset_bottom = -262.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="brush_size_control" type="VBoxContainer" parent="CanvasLayer/brush_size_popup"]
+layout_mode = 2
+
+[node name="title_label" type="Label" parent="CanvasLayer/brush_size_popup/brush_size_control"]
+layout_mode = 2
+text = "Brush Size"
+horizontal_alignment = 1
+
+[node name="brush_size_slider" type="HSlider" parent="CanvasLayer/brush_size_popup/brush_size_control"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+min_value = 0.5
+max_value = 6.4
+step = 0.1
+value = 2.0
+
+[node name="size_value_label" type="Label" parent="CanvasLayer/brush_size_popup/brush_size_control"]
+layout_mode = 2
+text = "2.0"
+horizontal_alignment = 1
+
+[node name="removing_brush_size_popup" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -406.0
+offset_top = -260.0
+offset_right = -113.0
+offset_bottom = -181.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="removing_brush_size_control" type="VBoxContainer" parent="CanvasLayer/removing_brush_size_popup"]
+layout_mode = 2
+
+[node name="title_label" type="Label" parent="CanvasLayer/removing_brush_size_popup/removing_brush_size_control"]
+layout_mode = 2
+text = "Removing Brush Size"
+horizontal_alignment = 1
+
+[node name="removing_brush_size_slider" type="HSlider" parent="CanvasLayer/removing_brush_size_popup/removing_brush_size_control"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+min_value = 0.5
+max_value = 6.4
+step = 0.1
+value = 2.0
+
+[node name="size_value_label" type="Label" parent="CanvasLayer/removing_brush_size_popup/removing_brush_size_control"]
+layout_mode = 2
+text = "2.0"
+horizontal_alignment = 1
+
+[node name="pencil_size_popup" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -406.0
+offset_top = -178.0
+offset_right = -113.0
+offset_bottom = -99.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="pencil_size_control" type="VBoxContainer" parent="CanvasLayer/pencil_size_popup"]
+layout_mode = 2
+
+[node name="title_label" type="Label" parent="CanvasLayer/pencil_size_popup/pencil_size_control"]
+layout_mode = 2
+text = "Pencil Size"
+horizontal_alignment = 1
+
+[node name="pencil_size_slider" type="HSlider" parent="CanvasLayer/pencil_size_popup/pencil_size_control"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+
+[node name="size_value_label" type="Label" parent="CanvasLayer/pencil_size_popup/pencil_size_control"]
+layout_mode = 2
+text = "0.50"
+horizontal_alignment = 1
+
+[node name="eraser_size_popup" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -406.0
+offset_top = -97.0
+offset_right = -113.0
+offset_bottom = -18.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="eraser_size_control" type="VBoxContainer" parent="CanvasLayer/eraser_size_popup"]
+layout_mode = 2
+
+[node name="title_label" type="Label" parent="CanvasLayer/eraser_size_popup/eraser_size_control"]
+layout_mode = 2
+text = "Eraser Size"
+horizontal_alignment = 1
+
+[node name="eraser_size_slider" type="HSlider" parent="CanvasLayer/eraser_size_popup/eraser_size_control"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.4
+
+[node name="size_value_label" type="Label" parent="CanvasLayer/eraser_size_popup/eraser_size_control"]
+layout_mode = 2
+text = "3.00"
+horizontal_alignment = 1
+
+[node name="PhysicsSettingsWindow" parent="." instance=ExtResource("13_physics_window")]
+
+[node name="file_manager" type="Node" parent="."]
+script = ExtResource("14_file_manager")
+
+[node name="NewCanvasDialog" parent="." instance=ExtResource("15_new_canvas_dialog")]
+
+[node name="ExportFileDialog" type="FileDialog" parent="."]
+title = "Export PNG"
+size = Vector2i(600, 400)
+access = 2
+filters = PackedStringArray("*.png ; PNG Image")
+
+[connection signal="pressed" from="CanvasLayer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/VBoxContainer/watercolor_button" to="brush_manager" method="_on_watercolor_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/VBoxContainer/removing_brush_button" to="brush_manager" method="_on_removing_brush_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/VBoxContainer/pencil_button" to="brush_manager" method="_on_pencil_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/VBoxContainer/eraser_button" to="brush_manager" method="_on_eraser_button_pressed"]
+[connection signal="color_changed" from="CanvasLayer/color_picker" to="brush_manager" method="_on_color_picker_changed"]
+[connection signal="value_changed" from="CanvasLayer/pigment_control/pigment_alpha_slider" to="brush_manager" method="_on_pigment_alpha_slider_changed"]
+[connection signal="value_changed" from="CanvasLayer/water_control/water_slider" to="brush_manager" method="_on_water_slider_value_changed"]
+[connection signal="value_changed" from="CanvasLayer/brush_size_popup/brush_size_control/brush_size_slider" to="brush_manager" method="_on_brush_size_slider_changed"]
+[connection signal="value_changed" from="CanvasLayer/removing_brush_size_popup/removing_brush_size_control/removing_brush_size_slider" to="brush_manager" method="_on_removing_brush_size_slider_changed"]
+[connection signal="value_changed" from="CanvasLayer/pencil_size_popup/pencil_size_control/pencil_size_slider" to="brush_manager" method="_on_pencil_size_slider_changed"]
+[connection signal="value_changed" from="CanvasLayer/eraser_size_popup/eraser_size_control/eraser_size_slider" to="brush_manager" method="_on_eraser_size_slider_changed"]
+[connection signal="file_selected" from="ExportFileDialog" to="." method="_on_export_file_selected"]
